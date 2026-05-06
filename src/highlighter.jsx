@@ -5,8 +5,7 @@
 // Token types: keyword | string | number | comment | function | type | punct |
 //              operator | builtin | tag | attr | variable | regex | text
 
-(function () {
-  const LANGS = {
+const LANGS = {
     javascript: {
       label: "JavaScript",
       aliases: ["js", "jsx", "javascript", "node"],
@@ -282,8 +281,8 @@
     },
   };
 
-  // TypeScript = JavaScript + extra types/keywords
-  LANGS.typescript.rules = [
+// TypeScript = JavaScript + extra types/keywords
+LANGS.typescript.rules = [
     { type: "comment", re: /\/\/[^\n]*/y },
     { type: "comment", re: /\/\*[\s\S]*?\*\//y },
     { type: "string", re: /`(?:\\.|\$\{[^}]*\}|[^`\\])*`/y },
@@ -297,69 +296,69 @@
     { type: "variable", re: /[A-Za-z_$][\w$]*/y },
     { type: "operator", re: /[=+\-*/%<>!&|^~?:]+/y },
     { type: "punct", re: /[{}()\[\];,.]/y },
-  ];
+];
 
-  // Build an id -> lang map and alias -> id map.
-  const ALIAS = {};
-  for (const id of Object.keys(LANGS)) {
-    LANGS[id].id = id;
-    for (const a of LANGS[id].aliases) ALIAS[a.toLowerCase()] = id;
+// Build an id -> lang map and alias -> id map.
+const ALIAS = {};
+for (const id of Object.keys(LANGS)) {
+  LANGS[id].id = id;
+  for (const a of LANGS[id].aliases) ALIAS[a.toLowerCase()] = id;
+}
+
+export function resolveLang(name) {
+  if (!name) return null;
+  const key = String(name).toLowerCase().trim();
+  if (LANGS[key]) return key;
+  return ALIAS[key] || null;
+}
+
+// Tokenize a single line at a time so highlighting respects \n boundaries.
+export function tokenize(code, langId) {
+  const lang = LANGS[langId] || LANGS.plain;
+  const rules = lang.rules;
+  const lines = code.split("\n");
+  const out = [];
+  for (const line of lines) {
+    out.push(tokenizeLine(line, rules));
   }
+  return out;
+}
 
-  function resolveLang(name) {
-    if (!name) return null;
-    const key = String(name).toLowerCase().trim();
-    if (LANGS[key]) return key;
-    return ALIAS[key] || null;
-  }
-
-  // Tokenize a single line at a time so highlighting respects \n boundaries.
-  function tokenize(code, langId) {
-    const lang = LANGS[langId] || LANGS.plain;
-    const rules = lang.rules;
-    const lines = code.split("\n");
-    const out = [];
-    for (const line of lines) {
-      out.push(tokenizeLine(line, rules));
+function tokenizeLine(line, rules) {
+  const tokens = [];
+  let i = 0;
+  const len = line.length;
+  while (i < len) {
+    // skip leading whitespace as its own token so layout is stable
+    const wsMatch = /[ \t]+/y;
+    wsMatch.lastIndex = i;
+    const ws = wsMatch.exec(line);
+    if (ws && ws.index === i) {
+      tokens.push({ type: "ws", text: ws[0] });
+      i += ws[0].length;
+      continue;
     }
-    return out;
-  }
-
-  function tokenizeLine(line, rules) {
-    const tokens = [];
-    let i = 0;
-    const len = line.length;
-    while (i < len) {
-      // skip leading whitespace as its own token so layout is stable
-      const wsMatch = /[ \t]+/y;
-      wsMatch.lastIndex = i;
-      const ws = wsMatch.exec(line);
-      if (ws && ws.index === i) {
-        tokens.push({ type: "ws", text: ws[0] });
-        i += ws[0].length;
-        continue;
-      }
-      let matched = false;
-      for (const rule of rules) {
-        rule.re.lastIndex = i;
-        const m = rule.re.exec(line);
-        if (m && m.index === i) {
-          tokens.push({ type: rule.as || rule.type, text: m[0] });
-          i += m[0].length;
-          matched = true;
-          break;
-        }
-      }
-      if (!matched) {
-        tokens.push({ type: "text", text: line[i] });
-        i += 1;
+    let matched = false;
+    for (const rule of rules) {
+      rule.re.lastIndex = i;
+      const m = rule.re.exec(line);
+      if (m && m.index === i) {
+        tokens.push({ type: rule.as || rule.type, text: m[0] });
+        i += m[0].length;
+        matched = true;
+        break;
       }
     }
-    return tokens;
+    if (!matched) {
+      tokens.push({ type: "text", text: line[i] });
+      i += 1;
+    }
   }
+  return tokens;
+}
 
-  // Heuristic auto-detection — scores each language by keyword + symbol hits.
-  function detect(code) {
+// Heuristic auto-detection — scores each language by keyword + symbol hits.
+export function detect(code) {
     if (!code || !code.trim()) return "plain";
     const sample = code.slice(0, 4000);
 
@@ -458,21 +457,18 @@
     if (/\brequire\s*\(/.test(sample)) hit("javascript", 1);
 
     let best = "plain";
-    let bestScore = 0;
-    for (const id of Object.keys(scores)) {
-      if (scores[id] > bestScore) {
-        bestScore = scores[id];
-        best = id;
-      }
+  let bestScore = 0;
+  for (const id of Object.keys(scores)) {
+    if (scores[id] > bestScore) {
+      bestScore = scores[id];
+      best = id;
     }
-    return bestScore >= 2 ? best : "plain";
   }
+  return bestScore >= 2 ? best : "plain";
+}
 
-  window.CodeSS_Highlighter = {
-    LANGS,
-    langList: () => Object.values(LANGS).map((l) => ({ id: l.id, label: l.label })),
-    resolveLang,
-    tokenize,
-    detect,
-  };
-})();
+export function langList() {
+  return Object.values(LANGS).map((l) => ({ id: l.id, label: l.label }));
+}
+
+export { LANGS };

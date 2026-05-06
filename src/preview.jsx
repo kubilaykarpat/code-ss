@@ -1,7 +1,12 @@
 // Preview — the right-column rendered screenshot frame.
 // One Preview per block. Exports rasterize this exact DOM into PNG or SVG.
 
-const Preview = ({
+import React from 'react';
+import { Icon, Btn } from './ui.jsx';
+import { tokenize, detect } from './highlighter.jsx';
+import { exportNode, copyPng } from './export.jsx';
+
+export const Preview = ({
   block,
   index,
   theme,
@@ -22,12 +27,12 @@ const Preview = ({
   const [flash, setFlash] = React.useState(null);
 
   const resolvedLangId = React.useMemo(() => {
-    if (block.lang === "auto") return window.CodeSS_Highlighter.detect(block.code);
+    if (block.lang === "auto") return detect(block.code);
     return block.lang;
   }, [block.lang, block.code]);
 
   const tokenLines = React.useMemo(
-    () => window.CodeSS_Highlighter.tokenize(block.code, resolvedLangId),
+    () => tokenize(block.code, resolvedLangId),
     [block.code, resolvedLangId]
   );
 
@@ -35,7 +40,7 @@ const Preview = ({
     setExporting(true);
     try {
       const name = (block.filename || `block-${index + 1}`).replace(/[^\w.-]+/g, "_");
-      await window.CodeSS_Export.exportNode(frameRef.current, fmt, name);
+      await exportNode(frameRef.current, fmt, name);
       setFlash(`${fmt.toUpperCase()} downloaded`);
     } catch (e) {
       setFlash("Export failed");
@@ -49,7 +54,7 @@ const Preview = ({
   const handleCopyImage = async () => {
     setExporting(true);
     try {
-      await window.CodeSS_Export.copyPng(frameRef.current);
+      await copyPng(frameRef.current);
       setFlash("Copied to clipboard");
     } catch (e) {
       setFlash("Copy failed");
@@ -167,5 +172,3 @@ function mixBorder(bg) {
   const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return lum > 0.5 ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)";
 }
-
-Object.assign(window, { Preview });

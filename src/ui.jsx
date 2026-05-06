@@ -1,6 +1,7 @@
 // Small UI primitives — buttons, dropdown, icon strokes.
+import React from 'react';
 
-const Icon = ({ name, size = 14 }) => {
+export const Icon = ({ name, size = 14 }) => {
   const common = { width: size, height: size, viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: 1.25, strokeLinecap: "round", strokeLinejoin: "round" };
   switch (name) {
     case "plus": return <svg {...common}><path d="M8 3v10M3 8h10"/></svg>;
@@ -22,7 +23,7 @@ const Icon = ({ name, size = 14 }) => {
 };
 
 // Tiny dropdown — custom because native <select> can't be themed tight enough.
-const Dropdown = ({ value, options, onChange, align = "right", width = 160, label }) => {
+export const Dropdown = ({ value, options, onChange, align = "right", width = 160, label }) => {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef(null);
   React.useEffect(() => {
@@ -60,7 +61,7 @@ const Dropdown = ({ value, options, onChange, align = "right", width = 160, labe
 };
 
 // Button with an optional leading icon. Variants: ghost, solid, hairline.
-const Btn = ({ icon, children, onClick, variant = "ghost", title, disabled, size = "md" }) => (
+export const Btn = ({ icon, children, onClick, variant = "ghost", title, disabled, size = "md" }) => (
   <button
     className={`btn btn-${variant} btn-${size}`}
     onClick={onClick}
@@ -73,7 +74,7 @@ const Btn = ({ icon, children, onClick, variant = "ghost", title, disabled, size
 );
 
 // Inline toggle — used for showing/hiding features.
-const Toggle = ({ on, onChange, label }) => (
+export const Toggle = ({ on, onChange, label }) => (
   <button className={`toggle ${on ? "is-on" : ""}`} onClick={() => onChange(!on)}>
     <span className="toggle-track"><span className="toggle-dot" /></span>
     {label && <span className="toggle-label">{label}</span>}
@@ -81,7 +82,7 @@ const Toggle = ({ on, onChange, label }) => (
 );
 
 // Slider with monospaced value readout.
-const Slider = ({ value, min, max, step = 1, onChange, unit = "", label }) => (
+export const Slider = ({ value, min, max, step = 1, onChange, unit = "", label }) => (
   <div className="slider-row">
     {label && <label className="slider-label">{label}</label>}
     <input type="range" min={min} max={max} step={step} value={value} onChange={(e) => onChange(Number(e.target.value))} />
@@ -90,7 +91,7 @@ const Slider = ({ value, min, max, step = 1, onChange, unit = "", label }) => (
 );
 
 // Segmented control — for picking among 2-4 options.
-const Segmented = ({ value, options, onChange }) => (
+export const Segmented = ({ value, options, onChange }) => (
   <div className="segmented">
     {options.map((o) => (
       <button
@@ -103,5 +104,3 @@ const Segmented = ({ value, options, onChange }) => (
     ))}
   </div>
 );
-
-Object.assign(window, { Icon, Dropdown, Btn, Toggle, Slider, Segmented });

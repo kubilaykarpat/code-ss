@@ -1,7 +1,10 @@
 // Tweaks panel — floating panel bottom-right. Only visible when tweak mode is on.
 
-const TweaksPanel = ({ settings, setSettings, onClose }) => {
-  const { THEMES, BACKGROUNDS, FONT_OPTIONS } = window.CodeSS_Themes;
+import React from 'react';
+import { Icon, Dropdown, Segmented, Slider, Toggle } from './ui.jsx';
+import { THEMES, BACKGROUNDS, FONT_OPTIONS } from './themes.jsx';
+
+export const TweaksPanel = ({ settings, setSettings, onClose }) => {
 
   const themeOpts = Object.entries(THEMES).map(([id, t]) => ({
     id, label: t.label, swatch: t.bg,
@@ -119,5 +122,3 @@ const TweaksPanel = ({ settings, setSettings, onClose }) => {
     </div>
   );
 };
-
-Object.assign(window, { TweaksPanel });

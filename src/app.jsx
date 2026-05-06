@@ -2,6 +2,14 @@
 // previews on the right. Global settings live in one state object; the Tweaks
 // panel mutates it and we persist to localStorage.
 
+import React from 'react';
+import { Icon, Btn } from './ui.jsx';
+import { THEMES, BACKGROUNDS, FONT_OPTIONS } from './themes.jsx';
+import { exportAll } from './export.jsx';
+import { CodeBlock } from './block.jsx';
+import { Preview } from './preview.jsx';
+import { TweaksPanel } from './tweaks.jsx';
+
 const DEFAULT_SETTINGS = /*EDITMODE-BEGIN*/{
   "theme": "mono",
   "background": "ash",
@@ -59,7 +67,7 @@ LIMIT 25;`,
   },
 ];
 
-const App = () => {
+export const App = () => {
   // Blocks
   const [blocks, setBlocks] = React.useState(() => {
     try {
@@ -102,9 +110,9 @@ const App = () => {
   }, []);
 
   // Resolved theme / bg / font
-  const theme = window.CodeSS_Themes.THEMES[settings.theme] || window.CodeSS_Themes.THEMES.mono;
-  const background = window.CodeSS_Themes.BACKGROUNDS[settings.background] || window.CodeSS_Themes.BACKGROUNDS.ash;
-  const font = window.CodeSS_Themes.FONT_OPTIONS.find((f) => f.id === settings.font) || window.CodeSS_Themes.FONT_OPTIONS[0];
+  const theme = THEMES[settings.theme] || THEMES.mono;
+  const background = BACKGROUNDS[settings.background] || BACKGROUNDS.ash;
+  const font = FONT_OPTIONS.find((f) => f.id === settings.font) || FONT_OPTIONS[0];
 
   // Block actions
   const addBlock = () => {
@@ -127,11 +135,11 @@ const App = () => {
     setBlocks(next);
   };
 
-  const exportAll = async () => {
+  const exportAllBlocks = async () => {
     setExporting(true);
     try {
       const nodes = [...document.querySelectorAll("[data-export-node='true']")];
-      await window.CodeSS_Export.exportAll(nodes, settings.exportFormat, "codess");
+      await exportAll(nodes, settings.exportFormat, "codess");
     } catch (e) {
       console.error(e);
     } finally {
@@ -156,7 +164,7 @@ const App = () => {
       <TopBar
         count={blocks.length}
         onAddBlock={addBlock}
-        onExportAll={exportAll}
+        onExportAll={exportAllBlocks}
         exporting={exporting}
         exportFormat={settings.exportFormat}
         onOpenTweaks={() => setTweakOpen(true)}
@@ -171,7 +179,7 @@ const App = () => {
           </div>
           <div className="col-head col-head-r">
             <span className="col-title">Preview</span>
-            <span className="col-sub">{window.CodeSS_Themes.THEMES[settings.theme].label} · {window.CodeSS_Themes.BACKGROUNDS[settings.background].label}</span>
+            <span className="col-sub">{THEMES[settings.theme].label} · {BACKGROUNDS[settings.background].label}</span>
           </div>
         </div>
         <div className="rows">
@@ -237,7 +245,7 @@ const App = () => {
   );
 };
 
-const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat, onOpenTweaks, tweakOpen }) => (
+export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat, onOpenTweaks, tweakOpen }) => (
   <header className="topbar">
     <div className="topbar-l">
       <div className="brand">
@@ -267,5 +275,3 @@ const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat, onOpe
     </div>
   </header>
 );
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App />);

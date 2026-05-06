@@ -1,11 +1,13 @@
 // Code block editor — the left-column card.
 // Textarea overlaid with a transparent highlighted view for live syntax colors.
 
-const { useState, useRef, useEffect, useMemo, useCallback } = React;
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { Icon, Dropdown, Btn } from './ui.jsx';
+import { tokenize, detect, langList, LANGS } from './highlighter.jsx';
 
 const LANG_OPTIONS = [
   { id: "auto", label: "Auto-detect" },
-  ...window.CodeSS_Highlighter.langList(),
+  ...langList(),
 ];
 
 // Fixed editor palette — independent of preview theme so keywords stay legible
@@ -32,7 +34,7 @@ const EDITOR_THEME = {
   },
 };
 
-const CodeBlock = ({
+export const CodeBlock = ({
   block,
   index,
   total,
@@ -53,13 +55,13 @@ const CodeBlock = ({
   // Resolve language: auto-detect if set to auto.
   const resolvedLangId = useMemo(() => {
     if (block.lang === "auto") {
-      return window.CodeSS_Highlighter.detect(block.code);
+      return detect(block.code);
     }
     return block.lang;
   }, [block.lang, block.code]);
 
   const resolvedLangLabel = useMemo(() => {
-    const l = window.CodeSS_Highlighter.LANGS[resolvedLangId];
+    const l = LANGS[resolvedLangId];
     return l ? l.label : "Plain";
   }, [resolvedLangId]);
 
@@ -205,9 +207,9 @@ const CodeBlock = ({
 };
 
 // Highlighted view — renders tokens with theme colors.
-const HighlightedView = ({ code, langId, theme, highlights, fontSize }) => {
+export const HighlightedView = ({ code, langId, theme, highlights, fontSize }) => {
   const tokenLines = useMemo(
-    () => window.CodeSS_Highlighter.tokenize(code, langId),
+    () => tokenize(code, langId),
     [code, langId]
   );
   return (
@@ -232,4 +234,4 @@ const HighlightedView = ({ code, langId, theme, highlights, fontSize }) => {
   );
 };
 
-Object.assign(window, { CodeBlock, HighlightedView, LANG_OPTIONS });
+export { LANG_OPTIONS };

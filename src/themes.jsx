@@ -1,8 +1,7 @@
 // Theme + background presets. Each theme defines per-token colors; each
 // background is either a solid, a gradient, or a subtle pattern.
 
-(function () {
-  const THEMES = {
+export const THEMES = {
     mono: {
       label: "Mono",
       bg: "#0f0f0e",
@@ -281,8 +280,8 @@
     },
   };
 
-  // Backgrounds (canvas around the window). Each is CSS background value.
-  const BACKGROUNDS = {
+// Backgrounds (canvas around the window). Each is CSS background value.
+export const BACKGROUNDS = {
     none: { label: "None", css: "transparent", swatch: "transparent", borderless: true },
     ash: { label: "Ash", css: "#1a1a18", swatch: "#1a1a18" },
     bone: { label: "Bone", css: "#f2efe8", swatch: "#f2efe8" },
@@ -298,14 +297,11 @@
     porcelain: { label: "Porcelain", css: "linear-gradient(135deg, #ffffff 0%, #e6e6e1 100%)", swatch: "linear-gradient(135deg, #ffffff 0%, #e6e6e1 100%)" },
   };
 
-  const FONT_OPTIONS = [
-    { id: "jetbrains", label: "JetBrains Mono", stack: "'JetBrains Mono', ui-monospace, monospace" },
-    { id: "geist", label: "Geist Mono", stack: "'Geist Mono', ui-monospace, monospace" },
-    { id: "ibm", label: "IBM Plex Mono", stack: "'IBM Plex Mono', ui-monospace, monospace" },
-    { id: "fira", label: "Fira Code", stack: "'Fira Code', ui-monospace, monospace" },
-    { id: "mono", label: "Menlo / Consolas", stack: "ui-monospace, Menlo, Consolas, monospace" },
-    { id: "source", label: "Source Code Pro", stack: "'Source Code Pro', ui-monospace, monospace" },
-  ];
-
-  window.CodeSS_Themes = { THEMES, BACKGROUNDS, FONT_OPTIONS };
-})();
+export const FONT_OPTIONS = [
+  { id: "jetbrains", label: "JetBrains Mono", stack: "'JetBrains Mono', ui-monospace, monospace" },
+  { id: "geist", label: "Geist Mono", stack: "'Geist Mono', ui-monospace, monospace" },
+  { id: "ibm", label: "IBM Plex Mono", stack: "'IBM Plex Mono', ui-monospace, monospace" },
+  { id: "fira", label: "Fira Code", stack: "'Fira Code', ui-monospace, monospace" },
+  { id: "mono", label: "Menlo / Consolas", stack: "ui-monospace, Menlo, Consolas, monospace" },
+  { id: "source", label: "Source Code Pro", stack: "'Source Code Pro', ui-monospace, monospace" },
+];
