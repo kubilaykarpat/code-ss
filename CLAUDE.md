@@ -43,10 +43,16 @@ When adding a new language to `highlighter.jsx`, add a corresponding `detect()` 
 
 ## Export gotchas
 
-The export path is fragile by design — rasterizing live DOM into a PNG via SVG `<foreignObject>` has a long list of browser quirks:
+The export path is fragile by design — rasterizing live DOM into a PNG via SVG `<foreignObject>` has a long list of browser quirks. Three things in `export.jsx` work together to keep PNG export from tainting the canvas:
 
-- **Don't load remote images or `@font-face` URLs into the preview tree** — they taint the canvas and PNG export fails. SVG export still works.
-- **Web fonts are intentionally not embedded** in the SVG. The exported file references the font name; viewers without the font fall back to monospace. The `rasterSafe` fallback in `export.jsx` swaps to a system mono stack when the primary path errors.
+1. **Web fonts are embedded as base64 data URIs at export time.** `embedFonts()` walks the preview subtree to find which `font-family` names are actually used, then collects matching `@font-face` rules from `document.styleSheets`. Cross-origin sheets (Google Fonts) can't be read via `cssRules` — those are re-fetched as text and parsed with a regex. Each `url(...)` inside a matched rule is fetched and replaced with a `data:font/woff2;base64,...` URI.
+2. **The `<style>` tag is injected inside the cloned node**, as the first child of the HTML root inside `<foreignObject>`. It is *not* placed in the outer SVG `<defs>` block — those styles do not reliably cascade into HTML inside `<foreignObject>` across browsers.
+3. **The SVG is loaded as a `data:` URL with `img.crossOrigin = "anonymous"`.** Blob URLs without `crossOrigin` set will produce a tainted canvas in Chrome even when all referenced resources are inline data URIs. The `data:` URL is built with `encodeURIComponent` so special characters (`#`, `&`, etc.) are safe.
+
+Other gotchas:
+
+- **Don't load remote images into the preview tree** — `<img>` tags or CSS `url()` background images pointing to external origins will taint the canvas. SVG export still works in those cases.
+- **`rasterSafe` fallback** — if anything in the primary path throws, `cloneWithInlineStyles({ rasterSafe: true })` swaps every `font-family` for a system mono stack and nulls out any external `background-image: url()` references. This is a safety net for unknown taint sources, not the main path.
 - **Computed-style whitelist** in `cloneWithInlineStyles` — only the listed CSS properties survive into the SVG. Add to the list if you introduce new visual styling that must export.
 
 ## Deployment
