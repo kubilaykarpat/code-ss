@@ -37,6 +37,8 @@ export const Block = ({
 }) => {
   const taRef = useRef(null);
   const frameRef = useRef(null);
+  const gutterRef = useRef(null);
+  const hlRef = useRef(null);
   const [exporting, setExporting] = useState(false);
   const [flash, setFlash] = useState(null);
 
@@ -89,6 +91,24 @@ export const Block = ({
     ta.style.height = "auto";
     ta.style.height = ta.scrollHeight + "px";
   }, [block.code, fontSize, font]);
+
+  useEffect(() => {
+    if (!showLineNumbers) return;
+    const gutter = gutterRef.current;
+    const hl = hlRef.current;
+    if (!gutter || !hl) return;
+    const sync = () => {
+      const lineEls = hl.children;
+      const btnEls = gutter.children;
+      for (let i = 0; i < lineEls.length && i < btnEls.length; i++) {
+        btnEls[i].style.height = lineEls[i].offsetHeight + 'px';
+      }
+    };
+    const ro = new ResizeObserver(sync);
+    Array.from(hl.children).forEach(el => ro.observe(el));
+    sync();
+    return () => ro.disconnect();
+  }, [block.code, showLineNumbers, fontSize, font.stack]);
 
   const lines = block.code.split("\n");
 
@@ -220,7 +240,7 @@ export const Block = ({
 
           <div className="bk-code">
             {showLineNumbers && (
-              <div className="bk-gutter" style={{ color: theme.muted, borderColor }}>
+              <div ref={gutterRef} className="bk-gutter" style={{ color: theme.muted, borderColor }}>
                 {lines.map((_, i) => (
                   <button
                     key={i}
@@ -236,7 +256,7 @@ export const Block = ({
             )}
 
             <div className="bk-editor">
-              <pre className="bk-hl" aria-hidden="true">
+              <pre ref={hlRef} className="bk-hl" aria-hidden="true">
                 {tokenLines.map((tokens, i) => (
                   <div
                     key={i}
