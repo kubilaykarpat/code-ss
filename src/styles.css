@@ -513,7 +513,8 @@ input, textarea { font: inherit; color: inherit; }
   display: flex;
   align-items: flex-start;
   justify-content: flex-end;
-  font-family: var(--font-code);
+  font-family: inherit;
+  font-size: inherit;
   line-height: 1.55;
   text-align: right;
   min-width: 18px;
@@ -544,6 +545,8 @@ input, textarea { font: inherit; color: inherit; }
   min-width: 0;
   tab-size: 2;
   pointer-events: none;
+  font-family: inherit;
+  font-size: inherit;
 }
 .bk-line {
   padding: 0 6px;
