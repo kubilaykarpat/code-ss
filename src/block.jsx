@@ -1,62 +1,47 @@
-// Code block editor — the left-column card.
-// Textarea overlaid with a transparent highlighted view for live syntax colors.
+// Unified block: edit code directly inside the themed canvas that is exported.
+// The textarea is overlaid on the highlighted view — what you see is what you get.
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Icon, Dropdown, Btn } from './ui.jsx';
-import { tokenize, detect, langList, LANGS } from './highlighter.jsx';
+import React, { useRef, useEffect, useMemo, useState } from 'react';
+import { Icon, Btn, Dropdown } from './ui.jsx';
+import { tokenize, detect, LANGS } from './highlighter.jsx';
+import { exportNode, copyPng } from './export.jsx';
 
-const LANG_OPTIONS = [
-  { id: "auto", label: "Auto-detect" },
-  ...langList(),
-];
+function mixBorder(bg) {
+  const hex = bg && bg.startsWith("#") ? bg : "#000000";
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return lum > 0.5 ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)";
+}
 
-// Fixed editor palette — independent of preview theme so keywords stay legible
-// on the always-white editor surface regardless of which preview theme is on.
-const EDITOR_THEME = {
-  fg: "#0e0e0c",
-  muted: "#9a9a92",
-  selection: "rgba(60,90,160,0.12)",
-  colors: {
-    comment: "#9a9a92",
-    keyword: "#2b4c8c",
-    string: "#5e7a3a",
-    number: "#8a5a2a",
-    function: "#2b4c8c",
-    type: "#6a3a8c",
-    builtin: "#8c3a5a",
-    variable: "#1a1a18",
-    operator: "#4a4a44",
-    punct: "#9a9a92",
-    tag: "#2b4c8c",
-    attr: "#5e7a3a",
-    regex: "#8a5a2a",
-    text: "#1a1a18",
-  },
-};
-
-export const CodeBlock = ({
+export const Block = ({
   block,
   index,
   total,
   theme,
+  background,
   font,
   fontSize,
+  padding,
+  chrome,
+  showLineNumbers,
+  dropShadow,
+  aspectRatio,
+  exportFormat,
+  showFilename,
   onChange,
   onRemove,
   onMoveUp,
   onMoveDown,
-  onExport,
-  showFilename,
-  globalShowLineNumbers,
 }) => {
   const taRef = useRef(null);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const frameRef = useRef(null);
+  const [exporting, setExporting] = useState(false);
+  const [flash, setFlash] = useState(null);
 
-  // Resolve language: auto-detect if set to auto.
   const resolvedLangId = useMemo(() => {
-    if (block.lang === "auto") {
-      return detect(block.code);
-    }
+    if (block.lang === "auto") return detect(block.code);
     return block.lang;
   }, [block.lang, block.code]);
 
@@ -65,7 +50,18 @@ export const CodeBlock = ({
     return l ? l.label : "Plain";
   }, [resolvedLangId]);
 
-  // Highlighted lines. Click the line-number gutter to toggle highlight.
+  const tokenLines = useMemo(
+    () => tokenize(block.code, resolvedLangId),
+    [block.code, resolvedLangId]
+  );
+
+  const langOptions = useMemo(() => {
+    return [
+      { id: "auto", label: `Auto (${resolvedLangLabel})` },
+      ...Object.entries(LANGS).map(([id, l]) => ({ id, label: l.label })),
+    ];
+  }, [resolvedLangLabel]);
+
   const toggleHighlight = (lineIdx) => {
     const set = new Set(block.highlights || []);
     if (set.has(lineIdx)) set.delete(lineIdx);
@@ -73,16 +69,13 @@ export const CodeBlock = ({
     onChange({ ...block, highlights: [...set].sort((a, b) => a - b) });
   };
 
-  // Handle Tab key to insert two spaces.
   const handleKeyDown = (e) => {
     if (e.key === "Tab") {
       e.preventDefault();
       const ta = e.target;
       const start = ta.selectionStart;
       const end = ta.selectionEnd;
-      const before = ta.value.slice(0, start);
-      const after = ta.value.slice(end);
-      const next = before + "  " + after;
+      const next = ta.value.slice(0, start) + "  " + ta.value.slice(end);
       onChange({ ...block, code: next });
       requestAnimationFrame(() => {
         ta.selectionStart = ta.selectionEnd = start + 2;
@@ -90,7 +83,6 @@ export const CodeBlock = ({
     }
   };
 
-  // Autosize textarea to fit content.
   useEffect(() => {
     const ta = taRef.current;
     if (!ta) return;
@@ -100,33 +92,79 @@ export const CodeBlock = ({
 
   const lines = block.code.split("\n");
 
+  const handleExport = async (fmt) => {
+    setExporting(true);
+    try {
+      const name = (block.filename || `block-${index + 1}`).replace(/[^\w.-]+/g, "_");
+      await exportNode(frameRef.current, fmt, name);
+      setFlash(`${fmt.toUpperCase()} downloaded`);
+    } catch (e) {
+      console.error(e);
+      setFlash("Export failed");
+    } finally {
+      setExporting(false);
+      setTimeout(() => setFlash(null), 1800);
+    }
+  };
+
+  const handleCopyImage = async () => {
+    setExporting(true);
+    try {
+      await copyPng(frameRef.current);
+      setFlash("Copied to clipboard");
+    } catch (e) {
+      setFlash("Copy failed");
+    } finally {
+      setExporting(false);
+      setTimeout(() => setFlash(null), 1800);
+    }
+  };
+
+  const aspectStyle = useMemo(() => {
+    if (aspectRatio === "auto") return {};
+    const [w, h] = aspectRatio.split(":").map(Number);
+    return { aspectRatio: `${w} / ${h}` };
+  }, [aspectRatio]);
+
+  const borderColor = mixBorder(theme.bg);
+
   return (
-    <div className="cb-wrap">
-      <div className="cb-head">
-        <div className="cb-head-l">
-          <span className="cb-index">{String(index + 1).padStart(2, "0")}</span>
+    <div className="bk">
+      <div className="bk-toolbar">
+        <div className="bk-toolbar-l">
+          <span className="bk-index">{String(index + 1).padStart(2, "0")}</span>
           {showFilename ? (
             <input
-              className="cb-filename"
+              className="bk-filename"
               value={block.filename}
               onChange={(e) => onChange({ ...block, filename: e.target.value })}
               placeholder="untitled"
             />
           ) : (
-            <span className="cb-placeholder">Block {index + 1}</span>
+            <span className="bk-placeholder">Block {index + 1}</span>
           )}
-          <span className="cb-lang-hint">
-            {block.lang === "auto" ? `auto · ${resolvedLangLabel.toLowerCase()}` : resolvedLangLabel.toLowerCase()}
-          </span>
         </div>
-        <div className="cb-head-r">
+        <div className="bk-toolbar-r">
+          {flash && <span className="bk-flash">{flash}</span>}
+          {block.highlights?.length > 0 && (
+            <button
+              className="bk-hl-pill"
+              onClick={() => onChange({ ...block, highlights: [] })}
+              title="Clear highlighted lines"
+            >
+              <Icon name="highlight" size={10} />
+              <span>{block.highlights.length}</span>
+              <Icon name="x" size={10} />
+            </button>
+          )}
           <Dropdown
             value={block.lang}
-            options={LANG_OPTIONS}
+            options={langOptions}
             onChange={(id) => onChange({ ...block, lang: id })}
             align="right"
-            width={180}
+            width={200}
           />
+          <span className="bk-toolbar-sep" />
           <button className="icon-btn" title="Move up" onClick={onMoveUp} disabled={index === 0}>
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"><path d="M4 10l4-4 4 4"/></svg>
           </button>
@@ -136,102 +174,107 @@ export const CodeBlock = ({
           <button className="icon-btn icon-btn-danger" title="Remove block" onClick={onRemove} disabled={total <= 1}>
             <Icon name="x" size={12} />
           </button>
-        </div>
-      </div>
-
-      <div className="cb">
-        <div
-          className="cb-body"
-          style={{ fontFamily: font.stack, fontSize }}
-        >
-        <div className="cb-editor-wrap">
-          {globalShowLineNumbers && (
-            <div className="cb-gutter" style={{ fontSize }}>
-              {lines.map((_, i) => (
-                <button
-                  key={i}
-                  className={`cb-line-no ${block.highlights?.includes(i) ? "is-hl" : ""}`}
-                  onClick={() => toggleHighlight(i)}
-                  title={block.highlights?.includes(i) ? "Unhighlight line" : "Highlight line"}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
-          )}
-          <div className="cb-editor">
-            <HighlightedView
-              code={block.code}
-              langId={resolvedLangId}
-              theme={EDITOR_THEME}
-              highlights={block.highlights || []}
-              fontSize={fontSize}
-            />
-            <textarea
-              ref={taRef}
-              className="cb-textarea"
-              value={block.code}
-              onChange={(e) => onChange({ ...block, code: e.target.value })}
-              onKeyDown={handleKeyDown}
-              spellCheck={false}
-              style={{ fontFamily: font.stack, fontSize, lineHeight: 1.55 }}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="cb-foot">
-        <div className="cb-foot-l">
-          {block.highlights?.length > 0 && (
-            <button
-              className="cb-hl-pill"
-              onClick={() => onChange({ ...block, highlights: [] })}
-              title="Clear highlighted lines"
-            >
-              <Icon name="highlight" size={10} />
-              <span>{block.highlights.length} highlighted</span>
-              <Icon name="x" size={10} />
-            </button>
-          )}
-          <span className="cb-meta">{lines.length} lines · {block.code.length} chars</span>
-        </div>
-        <div className="cb-foot-r">
-          <Btn icon="copy" size="sm" onClick={() => navigator.clipboard?.writeText(block.code)}>
-            Copy code
+          <span className="bk-toolbar-sep" />
+          <Btn icon="copy" size="sm" onClick={handleCopyImage} disabled={exporting} title="Copy image">
+            Copy
+          </Btn>
+          <Btn icon="download" size="sm" variant="solid" onClick={() => handleExport(exportFormat)} disabled={exporting}>
+            {exportFormat.toUpperCase()}
           </Btn>
         </div>
       </div>
+
+      <div
+        ref={frameRef}
+        className={`bk-frame ${background.borderless ? "is-borderless" : ""}`}
+        style={{ background: background.css, padding, ...aspectStyle }}
+        data-export-node="true"
+      >
+        <div
+          className={`bk-window ${dropShadow ? "has-shadow" : ""}`}
+          style={{
+            background: theme.bg,
+            color: theme.fg,
+            fontFamily: font.stack,
+            fontSize,
+          }}
+        >
+          {chrome === "macos" && (
+            <div className="bk-chrome" style={{ borderColor }}>
+              <span className="bk-dot" style={{ background: "#ff5f57" }} />
+              <span className="bk-dot" style={{ background: "#febc2e" }} />
+              <span className="bk-dot" style={{ background: "#28c840" }} />
+              {showFilename && block.filename && (
+                <span className="bk-chrome-name" style={{ color: theme.muted }}>
+                  {block.filename}
+                </span>
+              )}
+            </div>
+          )}
+          {chrome === "minimal" && showFilename && block.filename && (
+            <div className="bk-chrome bk-chrome-min" style={{ borderColor, color: theme.muted }}>
+              <Icon name="file" size={11} />
+              <span className="bk-chrome-name">{block.filename}</span>
+            </div>
+          )}
+
+          <div className="bk-code">
+            {showLineNumbers && (
+              <div className="bk-gutter" style={{ color: theme.muted, borderColor }}>
+                {lines.map((_, i) => (
+                  <button
+                    key={i}
+                    className={`bk-line-no ${block.highlights?.includes(i) ? "is-hl" : ""}`}
+                    onClick={() => toggleHighlight(i)}
+                    title={block.highlights?.includes(i) ? "Unhighlight" : "Highlight"}
+                    style={block.highlights?.includes(i) ? { color: theme.accent || theme.fg } : undefined}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="bk-editor">
+              <pre className="bk-hl" aria-hidden="true">
+                {tokenLines.map((tokens, i) => (
+                  <div
+                    key={i}
+                    className={`bk-line ${block.highlights?.includes(i) ? "is-hl" : ""}`}
+                    style={block.highlights?.includes(i) ? { background: theme.selection } : undefined}
+                  >
+                    {tokens.length === 0
+                      ? " "
+                      : tokens.map((t, j) => (
+                          <span
+                            key={j}
+                            style={{
+                              color: t.type === "ws" ? undefined : (theme.colors[t.type] || theme.fg),
+                            }}
+                          >
+                            {t.text}
+                          </span>
+                        ))}
+                  </div>
+                ))}
+              </pre>
+              <textarea
+                ref={taRef}
+                className="bk-textarea"
+                value={block.code}
+                onChange={(e) => onChange({ ...block, code: e.target.value })}
+                onKeyDown={handleKeyDown}
+                spellCheck={false}
+                style={{
+                  fontFamily: font.stack,
+                  fontSize,
+                  caretColor: theme.fg,
+                }}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
-
-// Highlighted view — renders tokens with theme colors.
-export const HighlightedView = ({ code, langId, theme, highlights, fontSize }) => {
-  const tokenLines = useMemo(
-    () => tokenize(code, langId),
-    [code, langId]
-  );
-  return (
-    <pre className="cb-hl" aria-hidden="true" style={{ fontSize, lineHeight: 1.55 }}>
-      {tokenLines.map((tokens, i) => (
-        <div
-          key={i}
-          className={`cb-hl-line ${highlights.includes(i) ? "is-hl" : ""}`}
-        >
-          {tokens.length === 0 ? <span>{"\u200b"}</span> : tokens.map((t, j) => (
-            <span
-              key={j}
-              style={{ color: t.type === "ws" ? undefined : (theme.colors[t.type] || theme.fg) }}
-            >
-              {t.text}
-            </span>
-          ))}
-          {"\n"}
-        </div>
-      ))}
-    </pre>
-  );
-};
-
-export { LANG_OPTIONS };
