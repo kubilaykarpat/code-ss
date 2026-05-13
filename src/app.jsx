@@ -1,13 +1,11 @@
-// Main App — two-column layout with stacked blocks on the left and stacked
-// previews on the right. Global settings live in one state object; the Tweaks
-// panel mutates it and we persist to localStorage.
+// Main App — single-column stacked blocks. Global settings live in one state
+// object; the Tweaks panel mutates it and we persist to localStorage.
 
 import React from 'react';
 import { Icon, Btn } from './ui.jsx';
 import { THEMES, BACKGROUNDS, FONT_OPTIONS } from './themes.jsx';
 import { exportAll } from './export.jsx';
-import { CodeBlock } from './block.jsx';
-import { Preview } from './preview.jsx';
+import { Block } from './block.jsx';
 import { TweaksPanel } from './tweaks.jsx';
 
 const DEFAULT_SETTINGS = /*EDITMODE-BEGIN*/{
@@ -68,7 +66,6 @@ LIMIT 25;`,
 ];
 
 export const App = () => {
-  // Blocks
   const [blocks, setBlocks] = React.useState(() => {
     try {
       const saved = localStorage.getItem("codess.blocks");
@@ -77,7 +74,6 @@ export const App = () => {
     return STARTER_BLOCKS;
   });
 
-  // Global settings (theme, bg, tweaks, etc.)
   const [settings, setSettings] = React.useState(() => {
     try {
       const saved = localStorage.getItem("codess.settings");
@@ -88,8 +84,8 @@ export const App = () => {
 
   const [tweakOpen, setTweakOpen] = React.useState(false);
   const [exporting, setExporting] = React.useState(false);
+  const [whyOpen, setWhyOpen] = React.useState(false);
 
-  // Persist
   React.useEffect(() => {
     localStorage.setItem("codess.blocks", JSON.stringify(blocks));
   }, [blocks]);
@@ -97,7 +93,6 @@ export const App = () => {
     localStorage.setItem("codess.settings", JSON.stringify(settings));
   }, [settings]);
 
-  // Tweaks integration with the host
   React.useEffect(() => {
     const onMsg = (e) => {
       if (!e.data) return;
@@ -109,12 +104,10 @@ export const App = () => {
     return () => window.removeEventListener("message", onMsg);
   }, []);
 
-  // Resolved theme / bg / font
   const theme = THEMES[settings.theme] || THEMES.mono;
   const background = BACKGROUNDS[settings.background] || BACKGROUNDS.ash;
   const font = FONT_OPTIONS.find((f) => f.id === settings.font) || FONT_OPTIONS[0];
 
-  // Block actions
   const addBlock = () => {
     const id = `b${Date.now()}`;
     setBlocks([...blocks, { id, filename: "untitled", lang: "auto", code: "// Start typing…\n", highlights: [] }]);
@@ -147,7 +140,6 @@ export const App = () => {
     }
   };
 
-  // Keyboard
   React.useEffect(() => {
     const onKey = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b") {
@@ -169,55 +161,33 @@ export const App = () => {
         exportFormat={settings.exportFormat}
         onOpenTweaks={() => setTweakOpen(true)}
         tweakOpen={tweakOpen}
+        onOpenWhy={() => setWhyOpen(true)}
       />
 
       <div className="page-scroll">
-        <div className="col-heads">
-          <div className="col-head">
-            <span className="col-title">Source</span>
-            <span className="col-sub">{blocks.length} {blocks.length === 1 ? "block" : "blocks"}</span>
-          </div>
-          <div className="col-head col-head-r">
-            <span className="col-title">Preview</span>
-            <span className="col-sub">{THEMES[settings.theme].label} · {BACKGROUNDS[settings.background].label}</span>
-          </div>
-        </div>
         <div className="rows">
           {blocks.map((b, i) => (
             <div className="row" key={b.id} data-block-id={b.id}>
-              <div className="row-l">
-                <CodeBlock
-                  block={b}
-                  index={i}
-                  total={blocks.length}
-                  theme={theme}
-                  font={font}
-                  fontSize={settings.fontSize}
-                  onChange={(next) => updateBlock(b.id, next)}
-                  onRemove={() => removeBlock(b.id)}
-                  onMoveUp={() => moveBlock(b.id, -1)}
-                  onMoveDown={() => moveBlock(b.id, 1)}
-                  showFilename={settings.showFilename}
-                  globalShowLineNumbers={settings.showLineNumbers}
-                />
-              </div>
-              <div className="row-r">
-                <Preview
-                  block={b}
-                  index={i}
-                  theme={theme}
-                  background={background}
-                  font={font}
-                  fontSize={settings.fontSize}
-                  padding={settings.padding}
-                  chrome={settings.chrome}
-                  showLineNumbers={settings.showLineNumbers}
-                  dropShadow={settings.dropShadow}
-                  aspectRatio={settings.aspectRatio}
-                  exportFormat={settings.exportFormat}
-                  showFilename={settings.showFilename}
-                />
-              </div>
+              <Block
+                block={b}
+                index={i}
+                total={blocks.length}
+                theme={theme}
+                background={background}
+                font={font}
+                fontSize={settings.fontSize}
+                padding={settings.padding}
+                chrome={settings.chrome}
+                showLineNumbers={settings.showLineNumbers}
+                dropShadow={settings.dropShadow}
+                aspectRatio={settings.aspectRatio}
+                exportFormat={settings.exportFormat}
+                showFilename={settings.showFilename}
+                onChange={(next) => updateBlock(b.id, next)}
+                onRemove={() => removeBlock(b.id)}
+                onMoveUp={() => moveBlock(b.id, -1)}
+                onMoveDown={() => moveBlock(b.id, 1)}
+              />
             </div>
           ))}
           <div className="row row-add">
@@ -244,17 +214,18 @@ export const App = () => {
           settings={settings}
           setSettings={(s) => {
             setSettings(s);
-            // Persist to host disk for tweak-mode
             window.parent.postMessage({ type: "__edit_mode_set_keys", edits: s }, "*");
           }}
           onClose={() => setTweakOpen(false)}
         />
       )}
+
+      {whyOpen && <WhyModal onClose={() => setWhyOpen(false)} />}
     </div>
   );
 };
 
-export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat, onOpenTweaks, tweakOpen }) => (
+export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat, onOpenTweaks, tweakOpen, onOpenWhy }) => (
   <header className="topbar">
     <div className="topbar-l">
       <div className="brand">
@@ -266,6 +237,9 @@ export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat
         </span>
         <span className="brand-name">Code-SS</span>
         <span className="brand-sub">/ screenshots from code</span>
+        <button className="why-link" onClick={onOpenWhy} title="Why this tool exists">
+          why?
+        </button>
       </div>
     </div>
     <div className="topbar-r">
@@ -284,3 +258,75 @@ export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat
     </div>
   </header>
 );
+
+const WhyModal = ({ onClose }) => {
+  React.useEffect(() => {
+    const onKey = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="why-backdrop" onClick={onClose}>
+      <div className="why-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Why Code-SS">
+        <button className="why-close" onClick={onClose} aria-label="Close">
+          <Icon name="x" size={14} />
+        </button>
+        <div className="why-eyebrow">why this exists</div>
+        <h2 className="why-title">Built for technical presentations.</h2>
+
+        <div className="why-body">
+          <p>
+            PowerPoint and Keynote can't paste formatted, syntax-highlighted code. The
+            only honest way to put code into a slide is to paste a <em>screenshot</em>.
+          </p>
+          <p>
+            Plenty of tools render one block beautifully — but a real technical talk
+            has a dozen. With those tools, every typo, every renamed variable, every
+            theme tweak means: open the tool, paste, configure, screenshot, drag into
+            the deck. Repeat ten times.
+          </p>
+
+          <div className="why-callout">
+            <span className="why-callout-label">Code-SS</span>
+            <p>
+              All your code blocks live on one page. Edit them inline. Export the
+              one you changed, or all of them at once. No round-tripping.
+            </p>
+          </div>
+
+          <ul className="why-list">
+            <li>
+              <span className="why-li-mark">→</span>
+              <div>
+                <strong>Edit in place.</strong> The block you see is the screenshot you get.
+              </div>
+            </li>
+            <li>
+              <span className="why-li-mark">→</span>
+              <div>
+                <strong>Many blocks, one tab.</strong> Stack them, reorder them, theme them all together.
+              </div>
+            </li>
+            <li>
+              <span className="why-li-mark">→</span>
+              <div>
+                <strong>Export per block or all at once.</strong> PNG or SVG, ready to drop into a slide.
+              </div>
+            </li>
+            <li>
+              <span className="why-li-mark">→</span>
+              <div>
+                <strong>Highlight lines.</strong> Click any line number to call it out — perfect for walking through code on stage.
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div className="why-foot">
+          <button className="why-cta" onClick={onClose}>Got it</button>
+        </div>
+      </div>
+    </div>
+  );
+};
