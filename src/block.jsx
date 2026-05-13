@@ -209,6 +209,7 @@ export const Block = ({
         className={`bk-frame ${background.borderless ? "is-borderless" : ""}`}
         style={{ background: background.css, padding, ...aspectStyle }}
         data-export-node="true"
+        data-tour={index === 0 ? "block-frame" : undefined}
       >
         <div
           className={`bk-window ${dropShadow ? "has-shadow" : ""}`}
@@ -240,7 +241,12 @@ export const Block = ({
 
           <div className="bk-code">
             {showLineNumbers && (
-              <div ref={gutterRef} className="bk-gutter" style={{ color: theme.muted, borderColor }}>
+              <div
+                ref={gutterRef}
+                className="bk-gutter"
+                style={{ color: theme.muted, borderColor }}
+                data-tour={index === 0 ? "line-numbers" : undefined}
+              >
                 {lines.map((_, i) => (
                   <button
                     key={i}

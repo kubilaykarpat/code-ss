@@ -7,6 +7,7 @@ import { THEMES, BACKGROUNDS, FONT_OPTIONS } from './themes.jsx';
 import { exportAll } from './export.jsx';
 import { Block } from './block.jsx';
 import { TweaksPanel } from './tweaks.jsx';
+import { Tutorial, TUTORIAL_SEEN_KEY } from './tutorial.jsx';
 
 const DEFAULT_SETTINGS = /*EDITMODE-BEGIN*/{
   "theme": "mono",
@@ -89,6 +90,22 @@ export const App = () => {
   const [tweakOpen, setTweakOpen] = React.useState(false);
   const [exporting, setExporting] = React.useState(false);
   const [whyOpen, setWhyOpen] = React.useState(false);
+  const [tourOpen, setTourOpen] = React.useState(() => {
+    try {
+      return !localStorage.getItem(TUTORIAL_SEEN_KEY);
+    } catch {
+      return true;
+    }
+  });
+
+  const closeTour = React.useCallback(() => {
+    setTourOpen(false);
+    try { localStorage.setItem(TUTORIAL_SEEN_KEY, '1'); } catch {}
+  }, []);
+  const replayTour = React.useCallback(() => {
+    setWhyOpen(false);
+    setTourOpen(true);
+  }, []);
 
   React.useEffect(() => {
     localStorage.setItem("codess.blocks", JSON.stringify(blocks));
@@ -235,7 +252,8 @@ export const App = () => {
         />
       )}
 
-      {whyOpen && <WhyModal onClose={() => setWhyOpen(false)} />}
+      {whyOpen && <WhyModal onClose={() => setWhyOpen(false)} onReplayTour={replayTour} />}
+      {tourOpen && <Tutorial onClose={closeTour} />}
     </div>
   );
 };
@@ -258,12 +276,16 @@ export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat
       </div>
     </div>
     <div className="topbar-r">
-      <Btn icon="plus" onClick={onAddBlock}>
-        New block <span className="btn-kbd">⌘B</span>
-      </Btn>
-      <Btn icon="download" variant="solid" onClick={onExportAll} disabled={exporting || count === 0}>
-        {exporting ? "Exporting…" : `Export all ${exportFormat.toUpperCase()}`}
-      </Btn>
+      <span data-tour="add-block">
+        <Btn icon="plus" onClick={onAddBlock}>
+          New block <span className="btn-kbd">⌘B</span>
+        </Btn>
+      </span>
+      <span data-tour="export-all">
+        <Btn icon="download" variant="solid" onClick={onExportAll} disabled={exporting || count === 0}>
+          {exporting ? "Exporting…" : `Export all ${exportFormat.toUpperCase()}`}
+        </Btn>
+      </span>
       <button
         className="icon-btn theme-btn"
         onClick={onToggleDarkMode}
@@ -276,6 +298,7 @@ export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat
         className={`icon-btn tweaks-btn ${tweakOpen ? "is-active" : ""}`}
         onClick={onToggleTweaks}
         title="Appearance"
+        data-tour="tweaks"
       >
         <Icon name="settings" size={14} />
       </button>
@@ -283,7 +306,7 @@ export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat
   </header>
 );
 
-const WhyModal = ({ onClose }) => {
+const WhyModal = ({ onClose, onReplayTour }) => {
   React.useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
     document.addEventListener("keydown", onKey);
@@ -348,6 +371,9 @@ const WhyModal = ({ onClose }) => {
         </div>
 
         <div className="why-foot">
+          {onReplayTour && (
+            <button className="why-replay" onClick={onReplayTour}>Replay tour</button>
+          )}
           <button className="why-cta" onClick={onClose}>Got it</button>
         </div>
       </div>
