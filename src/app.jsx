@@ -19,7 +19,8 @@ const DEFAULT_SETTINGS = /*EDITMODE-BEGIN*/{
   "showLineNumbers": true,
   "dropShadow": true,
   "showFilename": true,
-  "exportFormat": "png"
+  "exportFormat": "png",
+  "darkMode": false
 }/*EDITMODE-END*/;
 
 const STARTER_BLOCKS = [
@@ -79,7 +80,10 @@ export const App = () => {
       const saved = localStorage.getItem("codess.settings");
       if (saved) return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
     } catch {}
-    return { ...DEFAULT_SETTINGS };
+    const prefersDark =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+    return { ...DEFAULT_SETTINGS, darkMode: !!prefersDark };
   });
 
   const [tweakOpen, setTweakOpen] = React.useState(false);
@@ -92,6 +96,13 @@ export const App = () => {
   React.useEffect(() => {
     localStorage.setItem("codess.settings", JSON.stringify(settings));
   }, [settings]);
+
+  React.useEffect(() => {
+    document.documentElement.setAttribute(
+      "data-theme",
+      settings.darkMode ? "dark" : "light",
+    );
+  }, [settings.darkMode]);
 
   React.useEffect(() => {
     const onMsg = (e) => {
@@ -162,6 +173,10 @@ export const App = () => {
         onOpenTweaks={() => setTweakOpen(true)}
         tweakOpen={tweakOpen}
         onOpenWhy={() => setWhyOpen(true)}
+        darkMode={settings.darkMode}
+        onToggleDarkMode={() =>
+          setSettings({ ...settings, darkMode: !settings.darkMode })
+        }
       />
 
       <div className="page-scroll">
@@ -216,7 +231,7 @@ export const App = () => {
   );
 };
 
-export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat, onOpenTweaks, tweakOpen, onOpenWhy }) => (
+export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat, onOpenTweaks, tweakOpen, onOpenWhy, darkMode, onToggleDarkMode }) => (
   <header className="topbar">
     <div className="topbar-l">
       <div className="brand">
@@ -240,9 +255,17 @@ export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat
         {exporting ? "Exporting…" : `Export all ${exportFormat.toUpperCase()}`}
       </Btn>
       <button
+        className="icon-btn theme-btn"
+        onClick={onToggleDarkMode}
+        title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+        aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+      >
+        <Icon name={darkMode ? "sun" : "moon"} size={14} />
+      </button>
+      <button
         className={`icon-btn tweaks-btn ${tweakOpen ? "is-active" : ""}`}
         onClick={onOpenTweaks}
-        title="Open tweaks"
+        title="Appearance"
       >
         <Icon name="settings" size={14} />
       </button>
