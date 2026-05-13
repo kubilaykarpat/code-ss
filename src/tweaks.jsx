@@ -19,7 +19,7 @@ export const TweaksPanel = ({ settings, setSettings, onClose }) => {
   return (
     <div className="tweaks">
       <div className="tweaks-head">
-        <span className="tweaks-title">Tweaks</span>
+        <span className="tweaks-title">Appearance</span>
         <button className="icon-btn" onClick={onClose} title="Close"><Icon name="x" size={12} /></button>
       </div>
       <div className="tweaks-body">
