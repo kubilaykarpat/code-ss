@@ -249,8 +249,9 @@ export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat
       </div>
     </div>
     <div className="topbar-r">
-      <span className="kbd-hint"><span className="kbd">⌘B</span> add block</span>
-      <Btn icon="plus" onClick={onAddBlock}>New block</Btn>
+      <Btn icon="plus" onClick={onAddBlock}>
+        New block <span className="btn-kbd">⌘B</span>
+      </Btn>
       <Btn icon="download" variant="solid" onClick={onExportAll} disabled={exporting || count === 0}>
         {exporting ? "Exporting…" : `Export all ${exportFormat.toUpperCase()}`}
       </Btn>
