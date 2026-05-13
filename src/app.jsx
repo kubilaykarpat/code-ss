@@ -227,6 +227,15 @@ export const App = () => {
               <span className="add-kbd">⌘B</span>
             </button>
           </div>
+          <footer className="page-foot">
+            <span>
+              🦜 pair-programmed with a statistical parrot by{" "}
+              <a href="https://kubilaykarpat.com" target="_blank" rel="noreferrer noopener">
+                Kubilay Karpat
+              </a>
+              .
+            </span>
+          </footer>
         </div>
       </div>
 
