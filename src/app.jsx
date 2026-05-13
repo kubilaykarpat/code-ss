@@ -143,7 +143,7 @@ export const App = () => {
     setExporting(true);
     try {
       const nodes = [...document.querySelectorAll("[data-export-node='true']")];
-      await exportAll(nodes, settings.exportFormat, "codess");
+      await exportAll(nodes, settings.exportFormat, "snap");
     } catch (e) {
       console.error(e);
     } finally {
@@ -163,7 +163,7 @@ export const App = () => {
   }, [blocks]);
 
   return (
-    <div className="app" data-screen-label="Code-SS main">
+    <div className="app" data-screen-label="SNAP main">
       <TopBar
         count={blocks.length}
         onAddBlock={addBlock}
@@ -241,7 +241,7 @@ export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat
             <path d="M6 7l-2 2 2 2M12 7l2 2-2 2" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </span>
-        <span className="brand-name">Code-SS</span>
+        <span className="brand-name">SNAP</span>
         <span className="brand-sub">/ screenshots from code</span>
         <button className="why-link" onClick={onOpenWhy} title="Why this tool exists">
           why?
@@ -283,7 +283,7 @@ const WhyModal = ({ onClose }) => {
 
   return (
     <div className="why-backdrop" onClick={onClose}>
-      <div className="why-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Why Code-SS">
+      <div className="why-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Why SNAP">
         <button className="why-close" onClick={onClose} aria-label="Close">
           <Icon name="x" size={14} />
         </button>
@@ -303,7 +303,7 @@ const WhyModal = ({ onClose }) => {
           </p>
 
           <div className="why-callout">
-            <span className="why-callout-label">Code-SS</span>
+            <span className="why-callout-label">SNAP</span>
             <p>
               All your code blocks live on one page. Edit them inline. Export the
               one you changed, or all of them at once. No round-tripping.
