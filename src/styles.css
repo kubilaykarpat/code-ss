@@ -107,13 +107,13 @@ input, textarea { font: inherit; color: inherit; }
 }
 
 .btn-kbd {
-  margin-left: 4px;
-  padding: 1px 5px;
+  margin-left: 6px;
+  padding: 2px 5px;
   font-family: var(--font-code);
-  font-size: 9px;
-  border: 1px solid currentColor;
+  font-size: 10px;
+  background: color-mix(in srgb, currentColor 12%, transparent);
   border-radius: 3px;
-  opacity: 0.55;
+  opacity: 0.75;
 }
 
 /* ===== Buttons ===== */
