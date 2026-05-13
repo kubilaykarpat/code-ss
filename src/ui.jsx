@@ -18,6 +18,8 @@ export const Icon = ({ name, size = 14 }) => {
     case "settings": return <svg {...common}><circle cx="8" cy="8" r="2"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M3.5 12.5l1.4-1.4M11.1 4.9l1.4-1.4"/></svg>;
     case "lines": return <svg {...common}><path d="M2 4h12M2 8h12M2 12h8"/></svg>;
     case "code": return <svg {...common}><path d="M5 4l-3 4 3 4M11 4l3 4-3 4"/></svg>;
+    case "moon": return <svg {...common}><path d="M12.5 12.5A6 6 0 017 3.5a.5.5 0 00-.65-.47A7 7 0 1013 9.65a.5.5 0 00-.5-.65z"/></svg>;
+    case "sun": return <svg {...common}><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.1 3.1l1.4 1.4M11.5 11.5l1.4 1.4M3.1 12.9l1.4-1.4M11.5 4.5l1.4-1.4"/></svg>;
     default: return null;
   }
 };

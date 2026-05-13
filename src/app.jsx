@@ -85,6 +85,10 @@ export const App = () => {
   const [tweakOpen, setTweakOpen] = React.useState(false);
   const [exporting, setExporting] = React.useState(false);
   const [whyOpen, setWhyOpen] = React.useState(false);
+  const [darkMode, setDarkMode] = React.useState(() => {
+    try { return localStorage.getItem("codess.darkMode") === "true"; } catch {}
+    return false;
+  });
 
   React.useEffect(() => {
     localStorage.setItem("codess.blocks", JSON.stringify(blocks));
@@ -92,6 +96,10 @@ export const App = () => {
   React.useEffect(() => {
     localStorage.setItem("codess.settings", JSON.stringify(settings));
   }, [settings]);
+  React.useEffect(() => {
+    localStorage.setItem("codess.darkMode", darkMode);
+    document.documentElement.classList.toggle("dark", darkMode);
+  }, [darkMode]);
 
   React.useEffect(() => {
     const onMsg = (e) => {
@@ -162,6 +170,8 @@ export const App = () => {
         onOpenTweaks={() => setTweakOpen(true)}
         tweakOpen={tweakOpen}
         onOpenWhy={() => setWhyOpen(true)}
+        darkMode={darkMode}
+        onToggleDark={() => setDarkMode((d) => !d)}
       />
 
       <div className="page-scroll">
@@ -216,7 +226,7 @@ export const App = () => {
   );
 };
 
-export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat, onOpenTweaks, tweakOpen, onOpenWhy }) => (
+export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat, onOpenTweaks, tweakOpen, onOpenWhy, darkMode, onToggleDark }) => (
   <header className="topbar">
     <div className="topbar-l">
       <div className="brand">
@@ -239,6 +249,13 @@ export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat
       <Btn icon="download" variant="solid" onClick={onExportAll} disabled={exporting || count === 0}>
         {exporting ? "Exporting…" : `Export all ${exportFormat.toUpperCase()}`}
       </Btn>
+      <button
+        className="icon-btn"
+        onClick={onToggleDark}
+        title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+      >
+        <Icon name={darkMode ? "sun" : "moon"} size={14} />
+      </button>
       <button
         className={`icon-btn tweaks-btn ${tweakOpen ? "is-active" : ""}`}
         onClick={onOpenTweaks}

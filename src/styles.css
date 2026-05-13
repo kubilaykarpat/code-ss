@@ -15,8 +15,22 @@
   --radius: 4px;
   --font-ui: "Geist Mono", "IBM Plex Mono", ui-monospace, monospace;
   --font-code: "JetBrains Mono", ui-monospace, monospace;
+  --bg-hover: #EEEEE7;
   --shadow-1: 0 1px 0 rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.03);
   --shadow-window: 0 40px 80px -20px rgba(0,0,0,0.45), 0 20px 40px -20px rgba(0,0,0,0.25);
+}
+
+.dark {
+  --bg: #171715;
+  --bg-2: #1E1E1B;
+  --bg-hover: #2A2A26;
+  --ink: #EEEEE8;
+  --ink-2: #C0C0B8;
+  --mut: #6A6A62;
+  --mut-2: #424240;
+  --hair: #2C2C28;
+  --hair-2: #252522;
+  --shadow-1: 0 1px 0 rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.18);
 }
 
 * { box-sizing: border-box; }
@@ -121,7 +135,7 @@ input, textarea { font: inherit; color: inherit; }
   transition: background 120ms, color 120ms;
   white-space: nowrap;
 }
-.btn:hover:not(:disabled) { background: #EEEEE7; }
+.btn:hover:not(:disabled) { background: var(--bg-hover); }
 .btn-ghost { background: transparent; }
 .btn-ghost:hover:not(:disabled) { background: var(--bg-2); }
 .btn-hairline { background: var(--bg-2); }
@@ -167,7 +181,7 @@ input, textarea { font: inherit; color: inherit; }
   transition: background 120ms;
   white-space: nowrap;
 }
-.dd-trigger:hover { background: #EEEEE7; }
+.dd-trigger:hover { background: var(--bg-hover); }
 .dd-label { color: var(--mut); margin-right: 4px; text-transform: uppercase; letter-spacing: 0.06em; font-size: 10px; }
 .dd-value { font-weight: 500; }
 .dd-menu {
@@ -356,7 +370,7 @@ input, textarea { font: inherit; color: inherit; }
 }
 .add-block:hover {
   color: var(--ink);
-  background: #EEEEE7;
+  background: var(--bg-hover);
 }
 .add-kbd {
   margin-left: 8px;
@@ -652,7 +666,7 @@ input, textarea { font: inherit; color: inherit; }
   align-items: stretch;
   text-align: left;
 }
-.swatch:hover { background: #EEEEE7; }
+.swatch:hover { background: var(--bg-hover); }
 .swatch.is-active {
   background: var(--ink);
 }
