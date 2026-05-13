@@ -170,7 +170,7 @@ export const App = () => {
         onExportAll={exportAllBlocks}
         exporting={exporting}
         exportFormat={settings.exportFormat}
-        onOpenTweaks={() => setTweakOpen(true)}
+        onToggleTweaks={() => setTweakOpen((v) => !v)}
         tweakOpen={tweakOpen}
         onOpenWhy={() => setWhyOpen(true)}
         darkMode={settings.darkMode}
@@ -231,7 +231,7 @@ export const App = () => {
   );
 };
 
-export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat, onOpenTweaks, tweakOpen, onOpenWhy, darkMode, onToggleDarkMode }) => (
+export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat, onToggleTweaks, tweakOpen, onOpenWhy, darkMode, onToggleDarkMode }) => (
   <header className="topbar">
     <div className="topbar-l">
       <div className="brand">
@@ -264,7 +264,7 @@ export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat
       </button>
       <button
         className={`icon-btn tweaks-btn ${tweakOpen ? "is-active" : ""}`}
-        onClick={onOpenTweaks}
+        onClick={onToggleTweaks}
         title="Appearance"
       >
         <Icon name="settings" size={14} />
