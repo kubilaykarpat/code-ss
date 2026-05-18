@@ -324,8 +324,9 @@ input, textarea { font: inherit; color: inherit; }
 .row {
   display: flex;
   flex-direction: column;
+  align-items: center;
   padding: 0 28px;
-  max-width: 980px;
+  max-width: 1280px;
   margin: 0 auto;
   width: 100%;
   position: relative;
@@ -1115,9 +1116,169 @@ input, textarea { font: inherit; color: inherit; }
   color: var(--bg);
 }
 
+/* ===== Width resize handles ===== */
+.bk-frame-host {
+  position: relative;
+  width: 100%;
+}
+.bk-handle {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1.5px solid var(--ink-2);
+  transform: translateY(-50%);
+  cursor: ew-resize;
+  padding: 0;
+  z-index: 5;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+  opacity: 0;
+  transition: opacity 140ms, background 120ms, transform 120ms, border-color 120ms;
+}
+.bk-frame-host:hover .bk-handle,
+.bk-handle.is-dragging,
+.bk-handle:focus-visible {
+  opacity: 1;
+}
+.bk-handle:hover {
+  background: var(--ink);
+  border-color: var(--ink);
+  transform: translateY(-50%) scale(1.15);
+}
+.bk-handle.is-dragging {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.bk-handle-l { left: -7px; }
+.bk-handle-r { right: -7px; }
+.bk-width-readout {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-code);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  background: var(--ink);
+  color: var(--bg);
+  padding: 2px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 6;
+}
+.bk-width-reset {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-code);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  background: var(--bg);
+  color: var(--mut);
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 140ms, color 120ms, border-color 120ms;
+  z-index: 5;
+}
+.bk-frame-host:hover .bk-width-reset { opacity: 1; }
+.bk-width-reset:hover {
+  color: var(--ink);
+  border-color: var(--ink-2);
+}
+
+/* ===== Tweaks: reset widths button ===== */
+.tw-reset-widths {
+  margin-top: 4px;
+  align-self: flex-start;
+  font-family: var(--font-code);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  background: var(--bg);
+  color: var(--mut);
+  border: 1px solid var(--hair);
+  border-radius: 5px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: color 120ms, border-color 120ms, background 120ms;
+}
+.tw-reset-widths:hover:not(:disabled) {
+  color: var(--ink);
+  border-color: var(--ink-2);
+  background: var(--bg-2);
+}
+.tw-reset-widths:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ===== Confirm dialog ===== */
+.confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  font-family: var(--font-ui);
+}
+.confirm-modal {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 22px 24px 18px;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  box-shadow: 0 24px 48px -12px rgba(0,0,0,0.4), 0 8px 16px rgba(0,0,0,0.15);
+}
+.confirm-title {
+  margin: 0 0 6px;
+  font-size: 16px;
+  color: var(--ink);
+  font-weight: 600;
+}
+.confirm-body {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--mut);
+  line-height: 1.5;
+}
+.confirm-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.confirm-cancel,
+.confirm-ok {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  padding: 7px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.confirm-cancel {
+  background: transparent;
+  color: var(--mut);
+  border-color: var(--hair);
+}
+.confirm-cancel:hover { color: var(--ink); border-color: var(--ink-2); }
+.confirm-ok {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+.confirm-ok:hover { opacity: 0.88; }
+
 /* ===== Responsive ===== */
 @media (max-width: 760px) {
   .tweaks { left: 16px; right: 16px; width: auto; }
   .tour-card { width: calc(100vw - 32px) !important; left: 16px !important; }
   .tour-arrow { display: none; }
+  .bk-handle { opacity: 1; }
 }

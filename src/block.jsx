@@ -6,6 +6,11 @@ import { Icon, Btn, Dropdown } from './ui.jsx';
 import { tokenize, detect, LANGS } from './highlighter.jsx';
 import { exportNode, copyPng } from './export.jsx';
 
+export const WIDTH_MIN = 320;
+export const WIDTH_MAX = 1200;
+
+const clampWidth = (w) => Math.max(WIDTH_MIN, Math.min(WIDTH_MAX, Math.round(w)));
+
 function mixBorder(bg) {
   const hex = bg && bg.startsWith("#") ? bg : "#000000";
   const r = parseInt(hex.slice(1, 3), 16);
@@ -30,6 +35,7 @@ export const Block = ({
   aspectRatio,
   exportFormat,
   showFilename,
+  globalWidth,
   onChange,
   onRemove,
   onMoveUp,
@@ -37,10 +43,46 @@ export const Block = ({
 }) => {
   const taRef = useRef(null);
   const frameRef = useRef(null);
+  const hostRef = useRef(null);
   const gutterRef = useRef(null);
   const hlRef = useRef(null);
   const [exporting, setExporting] = useState(false);
   const [flash, setFlash] = useState(null);
+  const [dragWidth, setDragWidth] = useState(null);
+
+  const hasLocalWidth = block.width != null;
+  const effectiveWidth = dragWidth ?? (hasLocalWidth ? block.width : globalWidth);
+
+  const startResize = (side) => (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = effectiveWidth;
+    let latest = startWidth;
+    const onMove = (ev) => {
+      const dx = ev.clientX - startX;
+      const next = clampWidth(side === 'r' ? startWidth + dx * 2 : startWidth - dx * 2);
+      latest = next;
+      setDragWidth(next);
+    };
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      setDragWidth(null);
+      onChange({ ...block, width: latest });
+    };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    document.body.style.cursor = 'ew-resize';
+    document.body.style.userSelect = 'none';
+  };
+
+  const resetWidth = () => {
+    const { width, ...rest } = block;
+    onChange(rest);
+  };
 
   const resolvedLangId = useMemo(() => {
     if (block.lang === "auto") return detect(block.code);
@@ -149,7 +191,7 @@ export const Block = ({
   const borderColor = mixBorder(theme.bg);
 
   return (
-    <div className="bk">
+    <div className="bk" style={{ width: effectiveWidth, maxWidth: '100%' }}>
       <div className="bk-toolbar">
         <div className="bk-toolbar-l">
           <span className="bk-index">{String(index + 1).padStart(2, "0")}</span>
@@ -204,6 +246,34 @@ export const Block = ({
         </div>
       </div>
 
+      <div ref={hostRef} className="bk-frame-host">
+        <button
+          type="button"
+          className={`bk-handle bk-handle-l ${dragWidth != null ? 'is-dragging' : ''}`}
+          onMouseDown={startResize('l')}
+          aria-label="Resize block width"
+          title={`${effectiveWidth}px${hasLocalWidth ? '' : ' (global)'}`}
+        />
+        <button
+          type="button"
+          className={`bk-handle bk-handle-r ${dragWidth != null ? 'is-dragging' : ''}`}
+          onMouseDown={startResize('r')}
+          aria-label="Resize block width"
+          title={`${effectiveWidth}px${hasLocalWidth ? '' : ' (global)'}`}
+        />
+        {dragWidth != null && (
+          <span className="bk-width-readout">{dragWidth}px</span>
+        )}
+        {hasLocalWidth && dragWidth == null && (
+          <button
+            type="button"
+            className="bk-width-reset"
+            onClick={resetWidth}
+            title="Reset to global width"
+          >
+            {block.width}px · reset
+          </button>
+        )}
       <div
         ref={frameRef}
         className={`bk-frame ${background.borderless ? "is-borderless" : ""}`}
@@ -300,6 +370,7 @@ export const Block = ({
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
