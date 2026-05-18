@@ -10,7 +10,7 @@ import { TweaksPanel } from './tweaks.jsx';
 import { Tutorial, TUTORIAL_SEEN_KEY } from './tutorial.jsx';
 
 const DEFAULT_SETTINGS = /*EDITMODE-BEGIN*/{
-  "theme": "vapor",
+  "theme": "porcelain",
   "background": "violet",
   "chrome": "macos",
   "font": "jetbrains",
