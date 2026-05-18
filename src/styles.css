@@ -1116,7 +1116,7 @@ input, textarea { font: inherit; color: inherit; }
   color: var(--bg);
 }
 
-/* ===== Width resize handles ===== */
+/* ===== Width resize handles + ruler ===== */
 .bk-frame-host {
   position: relative;
   width: 100%;
@@ -1124,69 +1124,90 @@ input, textarea { font: inherit; color: inherit; }
 .bk-handle {
   position: absolute;
   top: 50%;
-  width: 14px;
-  height: 14px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: var(--bg);
-  border: 1.5px solid var(--ink-2);
+  background: var(--ink-2);
+  border: 0;
   transform: translateY(-50%);
   cursor: ew-resize;
   padding: 0;
   z-index: 5;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
   opacity: 0;
-  transition: opacity 140ms, background 120ms, transform 120ms, border-color 120ms;
+  transition: opacity 140ms, background 120ms, transform 120ms;
 }
 .bk-frame-host:hover .bk-handle,
-.bk-handle.is-dragging,
+.bk-frame-host.is-dragging .bk-handle,
 .bk-handle:focus-visible {
   opacity: 1;
 }
 .bk-handle:hover {
   background: var(--ink);
-  border-color: var(--ink);
-  transform: translateY(-50%) scale(1.15);
+  transform: translateY(-50%) scale(1.4);
 }
-.bk-handle.is-dragging {
+.bk-frame-host.is-dragging .bk-handle {
   background: var(--ink);
-  border-color: var(--ink);
 }
-.bk-handle-l { left: -7px; }
-.bk-handle-r { right: -7px; }
-.bk-width-readout {
+.bk-handle-l { left: -4px; }
+.bk-handle-r { right: -4px; }
+
+.bk-width-ruler {
   position: absolute;
-  top: -22px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: var(--font-code);
-  font-size: 10px;
-  letter-spacing: 0.04em;
-  background: var(--ink);
-  color: var(--bg);
-  padding: 2px 8px;
-  border-radius: 4px;
+  left: 0;
+  right: 0;
+  bottom: -22px;
+  display: flex;
+  align-items: center;
+  height: 16px;
   pointer-events: none;
-  z-index: 6;
+  opacity: 0;
+  transition: opacity 140ms;
 }
-.bk-width-reset {
+.bk-frame-host:hover .bk-width-ruler,
+.bk-frame-host.is-dragging .bk-width-ruler,
+.bk-frame-host.has-local .bk-width-ruler {
+  opacity: 1;
+}
+.bk-width-line {
+  flex: 1;
+  height: 1px;
+  background: var(--hair-2, var(--hair));
+}
+.bk-width-tick {
+  width: 1px;
+  height: 7px;
+  background: var(--mut-2, var(--mut));
+}
+.bk-width-label {
   position: absolute;
-  top: -22px;
   left: 50%;
-  transform: translateX(-50%);
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  background: var(--bg);
   font-family: var(--font-code);
   font-size: 10px;
   letter-spacing: 0.04em;
-  background: var(--bg);
+  color: var(--mut);
+  pointer-events: auto;
+  white-space: nowrap;
+}
+.bk-frame-host.is-dragging .bk-width-label { color: var(--ink); }
+.bk-width-reset {
+  font-family: inherit;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  background: transparent;
   color: var(--mut);
   border: 1px solid var(--hair);
-  border-radius: 4px;
-  padding: 2px 8px;
+  border-radius: 3px;
+  padding: 1px 6px;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 140ms, color 120ms, border-color 120ms;
-  z-index: 5;
+  transition: color 120ms, border-color 120ms;
 }
-.bk-frame-host:hover .bk-width-reset { opacity: 1; }
 .bk-width-reset:hover {
   color: var(--ink);
   border-color: var(--ink-2);

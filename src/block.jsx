@@ -281,34 +281,39 @@ export const Block = ({
         </div>
       </div>
 
-      <div ref={hostRef} className="bk-frame-host">
+      <div ref={hostRef} className={`bk-frame-host ${dragWidth != null ? 'is-dragging' : ''} ${hasLocalWidth ? 'has-local' : ''}`}>
         <button
           type="button"
-          className={`bk-handle bk-handle-l ${dragWidth != null ? 'is-dragging' : ''}`}
+          className="bk-handle bk-handle-l"
           onMouseDown={startResize('l')}
           aria-label="Resize block width"
           title={`${effectiveWidth}px${hasLocalWidth ? '' : ' (global)'}`}
         />
         <button
           type="button"
-          className={`bk-handle bk-handle-r ${dragWidth != null ? 'is-dragging' : ''}`}
+          className="bk-handle bk-handle-r"
           onMouseDown={startResize('r')}
           aria-label="Resize block width"
           title={`${effectiveWidth}px${hasLocalWidth ? '' : ' (global)'}`}
         />
-        {dragWidth != null && (
-          <span className="bk-width-readout">{dragWidth}px</span>
-        )}
-        {hasLocalWidth && dragWidth == null && (
-          <button
-            type="button"
-            className="bk-width-reset"
-            onClick={resetWidth}
-            title="Reset to global width"
-          >
-            {block.width}px · reset
-          </button>
-        )}
+        <div className="bk-width-ruler" aria-hidden="true">
+          <span className="bk-width-tick bk-width-tick-l" />
+          <span className="bk-width-line" />
+          <span className="bk-width-tick bk-width-tick-r" />
+          <span className="bk-width-label">
+            {effectiveWidth} px
+            {hasLocalWidth && (
+              <button
+                type="button"
+                className="bk-width-reset"
+                onClick={resetWidth}
+                title="Reset to global width"
+              >
+                reset
+              </button>
+            )}
+          </span>
+        </div>
       <div
         ref={frameRef}
         className={`bk-frame ${background.borderless ? "is-borderless" : ""}`}
