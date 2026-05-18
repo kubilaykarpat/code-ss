@@ -64,12 +64,47 @@ export const Block = ({
     ];
   }, [resolvedLangLabel]);
 
-  const toggleHighlight = (lineIdx) => {
-    const set = new Set(block.highlights || []);
-    if (set.has(lineIdx)) set.delete(lineIdx);
-    else set.add(lineIdx);
-    onChange({ ...block, highlights: [...set].sort((a, b) => a - b) });
+  const dragRef = useRef(null);
+
+  const applyDragRange = (current) => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    const lo = Math.min(drag.start, current);
+    const hi = Math.max(drag.start, current);
+    const next = new Set(drag.base);
+    for (let i = lo; i <= hi; i++) {
+      if (drag.mode === "add") next.add(i);
+      else next.delete(i);
+    }
+    onChange({ ...block, highlights: [...next].sort((a, b) => a - b) });
   };
+
+  const handleLineMouseDown = (e, lineIdx) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const base = new Set(block.highlights || []);
+    dragRef.current = {
+      start: lineIdx,
+      mode: base.has(lineIdx) ? "remove" : "add",
+      base,
+    };
+    applyDragRange(lineIdx);
+  };
+
+  const handleLineMouseEnter = (lineIdx) => {
+    if (!dragRef.current) return;
+    applyDragRange(lineIdx);
+  };
+
+  useEffect(() => {
+    const end = () => { dragRef.current = null; };
+    window.addEventListener("mouseup", end);
+    window.addEventListener("blur", end);
+    return () => {
+      window.removeEventListener("mouseup", end);
+      window.removeEventListener("blur", end);
+    };
+  }, []);
 
   const handleKeyDown = (e) => {
     if (e.key === "Tab") {
@@ -251,8 +286,9 @@ export const Block = ({
                   <button
                     key={i}
                     className={`bk-line-no ${block.highlights?.includes(i) ? "is-hl" : ""}`}
-                    onClick={() => toggleHighlight(i)}
-                    title={block.highlights?.includes(i) ? "Unhighlight" : "Highlight"}
+                    onMouseDown={(e) => handleLineMouseDown(e, i)}
+                    onMouseEnter={() => handleLineMouseEnter(i)}
+                    title={block.highlights?.includes(i) ? "Unhighlight" : "Highlight (drag to select range)"}
                     style={block.highlights?.includes(i) ? { color: theme.accent || theme.fg } : undefined}
                   >
                     {i + 1}
