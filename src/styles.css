@@ -483,6 +483,7 @@ input, textarea { font: inherit; color: inherit; }
 }
 
 .bk-frame {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -492,6 +493,22 @@ input, textarea { font: inherit; color: inherit; }
   overflow: hidden;
 }
 .bk-frame.is-borderless { background: transparent !important; }
+
+.bk-brand-logo {
+  position: absolute;
+  top: 18px;
+  left: 24px;
+  width: 96px;
+  height: auto;
+  pointer-events: none;
+  z-index: 2;
+  display: flex;
+}
+.bk-brand-logo svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
 
 .bk-window {
   width: 100%;
@@ -694,6 +711,22 @@ input, textarea { font: inherit; color: inherit; }
   border: 1px solid rgba(0,0,0,0.06);
 }
 .swatch-bg { border: 1px solid var(--hair); }
+.swatch-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.swatch-brand svg { display: block; }
+.swatch:disabled { cursor: not-allowed; }
+.tw-sec.is-disabled { opacity: 0.5; pointer-events: none; }
+.tw-sec.is-disabled .swatch-name { color: var(--ink-2); }
+.tw-hint {
+  font-size: 10px;
+  color: var(--ink-2);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
 .swatch-name {
   font-family: var(--font-code);
   font-size: 10px;

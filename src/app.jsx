@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Icon, Btn } from './ui.jsx';
-import { THEMES, BACKGROUNDS, FONT_OPTIONS } from './themes.jsx';
+import { THEMES, BACKGROUNDS, BRANDS, FONT_OPTIONS } from './themes.jsx';
 import { exportAll } from './export.jsx';
 import { Block } from './block.jsx';
 import { TweaksPanel } from './tweaks.jsx';
@@ -20,7 +20,8 @@ const DEFAULT_SETTINGS = /*EDITMODE-BEGIN*/{
   "dropShadow": true,
   "showFilename": true,
   "exportFormat": "png",
-  "darkMode": false
+  "darkMode": false,
+  "brand": "none"
 }/*EDITMODE-END*/;
 
 const STARTER_BLOCKS = [
@@ -117,6 +118,7 @@ export const App = () => {
 
   const theme = THEMES[settings.theme] || THEMES.mono;
   const background = BACKGROUNDS[settings.background] || BACKGROUNDS.ash;
+  const brand = BRANDS[settings.brand] || BRANDS.none;
   const font = FONT_OPTIONS.find((f) => f.id === settings.font) || FONT_OPTIONS[0];
 
   const addBlock = () => {
@@ -189,6 +191,7 @@ export const App = () => {
                 total={blocks.length}
                 theme={theme}
                 background={background}
+                brand={brand}
                 font={font}
                 fontSize={settings.fontSize}
                 padding={settings.padding}

@@ -21,6 +21,7 @@ export const Block = ({
   total,
   theme,
   background,
+  brand,
   font,
   fontSize,
   padding,
@@ -206,10 +207,15 @@ export const Block = ({
 
       <div
         ref={frameRef}
-        className={`bk-frame ${background.borderless ? "is-borderless" : ""}`}
-        style={{ background: background.css, padding, ...aspectStyle }}
+        className={`bk-frame ${brand?.bg ? "has-brand" : ""} ${!brand?.bg && background.borderless ? "is-borderless" : ""}`}
+        style={{ background: brand?.bg || background.css, padding, ...aspectStyle }}
         data-export-node="true"
       >
+        {brand?.logo && (
+          <div className="bk-brand-logo" style={{ color: brand.logoColor }}>
+            {React.createElement(brand.logo)}
+          </div>
+        )}
         <div
           className={`bk-window ${dropShadow ? "has-shadow" : ""}`}
           style={{
