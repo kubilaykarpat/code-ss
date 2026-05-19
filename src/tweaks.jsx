@@ -3,8 +3,9 @@
 import React from 'react';
 import { Icon, Dropdown, Segmented, Slider, Toggle } from './ui.jsx';
 import { THEMES, BACKGROUNDS, FONT_OPTIONS } from './themes.jsx';
+import { WIDTH_MIN, WIDTH_MAX } from './block.jsx';
 
-export const TweaksPanel = ({ settings, setSettings, onClose }) => {
+export const TweaksPanel = ({ settings, setSettings, onClose, hasLocalWidths, onRequestResetWidths }) => {
 
   const themeOpts = Object.entries(THEMES).map(([id, t]) => ({
     id, label: t.label, swatch: t.bg,
@@ -84,6 +85,15 @@ export const TweaksPanel = ({ settings, setSettings, onClose }) => {
         <section className="tw-sec">
           <Slider label="Font size" value={settings.fontSize} min={11} max={22} step={1} unit="px" onChange={(v) => update({ fontSize: v })} />
           <Slider label="Padding" value={settings.padding} min={0} max={96} step={4} unit="px" onChange={(v) => update({ padding: v })} />
+          <Slider label="Width" value={settings.width} min={WIDTH_MIN} max={WIDTH_MAX} step={8} unit="px" onChange={(v) => update({ width: v })} />
+          <button
+            className="tw-reset-widths"
+            onClick={onRequestResetWidths}
+            disabled={!hasLocalWidths}
+            title={hasLocalWidths ? "Clear per-block widths" : "No blocks have a custom width"}
+          >
+            Reset all local widths
+          </button>
         </section>
 
         <section className="tw-sec">

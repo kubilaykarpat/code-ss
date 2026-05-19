@@ -16,6 +16,7 @@ const DEFAULT_SETTINGS = /*EDITMODE-BEGIN*/{
   "font": "jetbrains",
   "fontSize": 14,
   "padding": 48,
+  "width": 760,
   "aspectRatio": "auto",
   "showLineNumbers": true,
   "dropShadow": true,
@@ -90,6 +91,7 @@ export const App = () => {
   const [tweakOpen, setTweakOpen] = React.useState(false);
   const [exporting, setExporting] = React.useState(false);
   const [whyOpen, setWhyOpen] = React.useState(false);
+  const [resetWidthsOpen, setResetWidthsOpen] = React.useState(false);
   const [tourOpen, setTourOpen] = React.useState(() => {
     try {
       return !localStorage.getItem(TUTORIAL_SEEN_KEY);
@@ -145,6 +147,14 @@ export const App = () => {
     }, 50);
   };
   const updateBlock = (id, next) => setBlocks(blocks.map((b) => (b.id === id ? next : b)));
+  const resetAllWidths = () => {
+    setBlocks(blocks.map((b) => {
+      if (b.width == null) return b;
+      const { width, ...rest } = b;
+      return rest;
+    }));
+  };
+  const hasLocalWidths = blocks.some((b) => b.width != null);
   const removeBlock = (id) => setBlocks(blocks.filter((b) => b.id !== id));
   const moveBlock = (id, dir) => {
     const i = blocks.findIndex((b) => b.id === id);
@@ -215,6 +225,7 @@ export const App = () => {
                 aspectRatio={settings.aspectRatio}
                 exportFormat={settings.exportFormat}
                 showFilename={settings.showFilename}
+                globalWidth={settings.width}
                 onChange={(next) => updateBlock(b.id, next)}
                 onRemove={() => removeBlock(b.id)}
                 onMoveUp={() => moveBlock(b.id, -1)}
@@ -249,6 +260,18 @@ export const App = () => {
             window.parent.postMessage({ type: "__edit_mode_set_keys", edits: s }, "*");
           }}
           onClose={() => setTweakOpen(false)}
+          hasLocalWidths={hasLocalWidths}
+          onRequestResetWidths={() => setResetWidthsOpen(true)}
+        />
+      )}
+
+      {resetWidthsOpen && (
+        <ConfirmDialog
+          title="Reset all local widths?"
+          body="Every block will fall back to the global width. This can't be undone."
+          confirmLabel="Reset widths"
+          onConfirm={() => { resetAllWidths(); setResetWidthsOpen(false); }}
+          onCancel={() => setResetWidthsOpen(false)}
         />
       )}
 
@@ -305,6 +328,30 @@ export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat
     </div>
   </header>
 );
+
+const ConfirmDialog = ({ title, body, confirmLabel = "Confirm", cancelLabel = "Cancel", onConfirm, onCancel }) => {
+  React.useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onCancel();
+      if (e.key === "Enter") onConfirm();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onCancel, onConfirm]);
+
+  return (
+    <div className="confirm-backdrop" onClick={onCancel}>
+      <div className="confirm-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label={title}>
+        <h3 className="confirm-title">{title}</h3>
+        {body && <p className="confirm-body">{body}</p>}
+        <div className="confirm-foot">
+          <button className="confirm-cancel" onClick={onCancel}>{cancelLabel}</button>
+          <button className="confirm-ok" onClick={onConfirm} autoFocus>{confirmLabel}</button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const WhyModal = ({ onClose, onReplayTour }) => {
   React.useEffect(() => {
