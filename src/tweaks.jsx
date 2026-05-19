@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Icon, Dropdown, Segmented, Slider, Toggle } from './ui.jsx';
-import { THEMES, BACKGROUNDS, FONT_OPTIONS } from './themes.jsx';
+import { THEMES, BACKGROUNDS, BRANDS, FONT_OPTIONS } from './themes.jsx';
 
 export const TweaksPanel = ({ settings, setSettings, onClose }) => {
 
@@ -12,6 +12,10 @@ export const TweaksPanel = ({ settings, setSettings, onClose }) => {
   const bgOpts = Object.entries(BACKGROUNDS).map(([id, b]) => ({
     id, label: b.label, swatch: b.swatch,
   }));
+  const brandOpts = Object.entries(BRANDS).map(([id, b]) => ({
+    id, label: b.label, swatch: b.swatch, logo: b.logo, logoColor: b.logoColor,
+  }));
+  const brandActive = settings.brand && settings.brand !== "none";
   const fontOpts = FONT_OPTIONS.map((f) => ({ id: f.id, label: f.label }));
 
   const update = (patch) => setSettings({ ...settings, ...patch });
@@ -19,7 +23,7 @@ export const TweaksPanel = ({ settings, setSettings, onClose }) => {
   return (
     <div className="tweaks">
       <div className="tweaks-head">
-        <span className="tweaks-title">Tweaks</span>
+        <span className="tweaks-title">Appearance</span>
         <button className="icon-btn" onClick={onClose} title="Close"><Icon name="x" size={12} /></button>
       </div>
       <div className="tweaks-body">
@@ -42,7 +46,38 @@ export const TweaksPanel = ({ settings, setSettings, onClose }) => {
         </section>
 
         <section className="tw-sec">
-          <div className="tw-label">Background</div>
+          <div className="tw-label">Brand</div>
+          <div className="swatch-grid">
+            {brandOpts.map((b) => {
+              const Logo = b.logo;
+              return (
+                <button
+                  key={b.id}
+                  className={`swatch ${settings.brand === b.id ? "is-active" : ""}`}
+                  onClick={() => update({ brand: b.id })}
+                  title={b.label}
+                >
+                  <span
+                    className="swatch-chip swatch-bg swatch-brand"
+                    style={{
+                      background: b.swatch || "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 10px 10px",
+                      color: b.logoColor || undefined,
+                    }}
+                  >
+                    {Logo && <Logo width="22" height="10" />}
+                  </span>
+                  <span className="swatch-name">{b.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className={`tw-sec ${brandActive ? "is-disabled" : ""}`}>
+          <div className="tw-label">
+            Background
+            {brandActive && <span className="tw-hint"> · locked by brand</span>}
+          </div>
           <div className="swatch-grid">
             {bgOpts.map((b) => (
               <button
@@ -50,6 +85,7 @@ export const TweaksPanel = ({ settings, setSettings, onClose }) => {
                 className={`swatch ${settings.background === b.id ? "is-active" : ""}`}
                 onClick={() => update({ background: b.id })}
                 title={b.label}
+                disabled={brandActive}
               >
                 <span className="swatch-chip swatch-bg" style={{ background: b.swatch === "transparent" ? "repeating-conic-gradient(#ddd 0% 25%, #fff 0% 50%) 50% / 10px 10px" : b.swatch }} />
                 <span className="swatch-name">{b.label}</span>

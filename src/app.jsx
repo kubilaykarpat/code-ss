@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { Icon, Btn } from './ui.jsx';
-import { THEMES, BACKGROUNDS, FONT_OPTIONS } from './themes.jsx';
+import { THEMES, BACKGROUNDS, BRANDS, FONT_OPTIONS } from './themes.jsx';
 import { exportAll } from './export.jsx';
 import { Block } from './block.jsx';
 import { TweaksPanel } from './tweaks.jsx';
@@ -19,7 +19,9 @@ const DEFAULT_SETTINGS = /*EDITMODE-BEGIN*/{
   "showLineNumbers": true,
   "dropShadow": true,
   "showFilename": true,
-  "exportFormat": "png"
+  "exportFormat": "png",
+  "darkMode": false,
+  "brand": "none"
 }/*EDITMODE-END*/;
 
 const STARTER_BLOCKS = [
@@ -79,7 +81,10 @@ export const App = () => {
       const saved = localStorage.getItem("codess.settings");
       if (saved) return { ...DEFAULT_SETTINGS, ...JSON.parse(saved) };
     } catch {}
-    return { ...DEFAULT_SETTINGS };
+    const prefersDark =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-color-scheme: dark)").matches;
+    return { ...DEFAULT_SETTINGS, darkMode: !!prefersDark };
   });
 
   const [tweakOpen, setTweakOpen] = React.useState(false);
@@ -94,6 +99,13 @@ export const App = () => {
   }, [settings]);
 
   React.useEffect(() => {
+    document.documentElement.setAttribute(
+      "data-theme",
+      settings.darkMode ? "dark" : "light",
+    );
+  }, [settings.darkMode]);
+
+  React.useEffect(() => {
     const onMsg = (e) => {
       if (!e.data) return;
       if (e.data.type === "__activate_edit_mode") setTweakOpen(true);
@@ -106,6 +118,7 @@ export const App = () => {
 
   const theme = THEMES[settings.theme] || THEMES.mono;
   const background = BACKGROUNDS[settings.background] || BACKGROUNDS.ash;
+  const brand = BRANDS[settings.brand] || BRANDS.none;
   const font = FONT_OPTIONS.find((f) => f.id === settings.font) || FONT_OPTIONS[0];
 
   const addBlock = () => {
@@ -132,7 +145,7 @@ export const App = () => {
     setExporting(true);
     try {
       const nodes = [...document.querySelectorAll("[data-export-node='true']")];
-      await exportAll(nodes, settings.exportFormat, "codess");
+      await exportAll(nodes, settings.exportFormat, "snap");
     } catch (e) {
       console.error(e);
     } finally {
@@ -152,16 +165,20 @@ export const App = () => {
   }, [blocks]);
 
   return (
-    <div className="app" data-screen-label="Code-SS main">
+    <div className="app" data-screen-label="SNAP main">
       <TopBar
         count={blocks.length}
         onAddBlock={addBlock}
         onExportAll={exportAllBlocks}
         exporting={exporting}
         exportFormat={settings.exportFormat}
-        onOpenTweaks={() => setTweakOpen(true)}
+        onToggleTweaks={() => setTweakOpen((v) => !v)}
         tweakOpen={tweakOpen}
         onOpenWhy={() => setWhyOpen(true)}
+        darkMode={settings.darkMode}
+        onToggleDarkMode={() =>
+          setSettings({ ...settings, darkMode: !settings.darkMode })
+        }
       />
 
       <div className="page-scroll">
@@ -174,6 +191,7 @@ export const App = () => {
                 total={blocks.length}
                 theme={theme}
                 background={background}
+                brand={brand}
                 font={font}
                 fontSize={settings.fontSize}
                 padding={settings.padding}
@@ -225,7 +243,7 @@ export const App = () => {
   );
 };
 
-export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat, onOpenTweaks, tweakOpen, onOpenWhy }) => (
+export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat, onToggleTweaks, tweakOpen, onOpenWhy, darkMode, onToggleDarkMode }) => (
   <header className="topbar">
     <div className="topbar-l">
       <div className="brand">
@@ -235,7 +253,7 @@ export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat
             <path d="M6 7l-2 2 2 2M12 7l2 2-2 2" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </span>
-        <span className="brand-name">Code-SS</span>
+        <span className="brand-name">SNAP</span>
         <span className="brand-sub">/ screenshots from code</span>
         <button className="why-link" onClick={onOpenWhy} title="Why this tool exists">
           why?
@@ -243,15 +261,24 @@ export const TopBar = ({ count, onAddBlock, onExportAll, exporting, exportFormat
       </div>
     </div>
     <div className="topbar-r">
-      <span className="kbd-hint"><span className="kbd">⌘B</span> add block</span>
-      <Btn icon="plus" onClick={onAddBlock}>New block</Btn>
+      <Btn icon="plus" onClick={onAddBlock}>
+        New block <span className="btn-kbd">⌘B</span>
+      </Btn>
       <Btn icon="download" variant="solid" onClick={onExportAll} disabled={exporting || count === 0}>
         {exporting ? "Exporting…" : `Export all ${exportFormat.toUpperCase()}`}
       </Btn>
       <button
+        className="icon-btn theme-btn"
+        onClick={onToggleDarkMode}
+        title={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+        aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+      >
+        <Icon name={darkMode ? "sun" : "moon"} size={14} />
+      </button>
+      <button
         className={`icon-btn tweaks-btn ${tweakOpen ? "is-active" : ""}`}
-        onClick={onOpenTweaks}
-        title="Open tweaks"
+        onClick={onToggleTweaks}
+        title="Appearance"
       >
         <Icon name="settings" size={14} />
       </button>
@@ -268,7 +295,7 @@ const WhyModal = ({ onClose }) => {
 
   return (
     <div className="why-backdrop" onClick={onClose}>
-      <div className="why-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Why Code-SS">
+      <div className="why-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-label="Why SNAP">
         <button className="why-close" onClick={onClose} aria-label="Close">
           <Icon name="x" size={14} />
         </button>
@@ -288,7 +315,7 @@ const WhyModal = ({ onClose }) => {
           </p>
 
           <div className="why-callout">
-            <span className="why-callout-label">Code-SS</span>
+            <span className="why-callout-label">SNAP</span>
             <p>
               All your code blocks live on one page. Edit them inline. Export the
               one you changed, or all of them at once. No round-tripping.
